@@ -1,11 +1,12 @@
+use std::collections::HashMap{self, Entry};
+
 fn main() {
     println!("Hello, world!");
 
-    let mylist = vec![1, 2, 8, 4, 5];
+    let mylist = vec![1, 2, 8, 4, 6, 9];
 
-    let mean = mean(&mylist);
-
-    println!("The mean of these {} elements is {}.", mylist.len(), mean);
+    println!("The mean is {}.", mean(&mylist));
+    println!("The median is {}.", median(&mylist));
 }
 
 fn mean(input: &Vec<i32>) -> i32 {
@@ -14,4 +15,13 @@ fn mean(input: &Vec<i32>) -> i32 {
         sum += i
     }
     sum / (input.len() as i32)
+}
+
+fn median(input: &Vec<i32>) -> i32 {
+    let mut sorted = input.clone();
+    sorted.sort();
+
+    let lower = sorted[(sorted.len() - 1) / 2];
+    let upper = sorted[sorted.len() / 2];
+    (lower + upper) / 2
 }
