@@ -16,19 +16,29 @@ impl Company {
     }
 
     fn add_employee(&mut self, employee: Employee, department: String) {
-        let department = self.people_by_department.entry(department).or_insert(Vec::with_capacity(1));
+        let department = self
+            .people_by_department
+            .entry(department)
+            .or_insert(Vec::with_capacity(1));
         department.push(employee);
     }
 
     fn get_employees(&self) -> Vec<&Employee> {
-        self.people_by_department.values().flat_map(|employees| {employees.iter()}).collect()
+        self.people_by_department
+            .values()
+            .flat_map(|employees| employees.iter())
+            .collect()
     }
-    
+
+    fn get_employees_by_department(&self, department: &str) -> Option<&Vec<Employee>> {
+        self.people_by_department.get(department)
+    }
+
     fn remove_by_name(&mut self, name: &str, department: &str) {
         let department = self.people_by_department.get_mut(department);
-        
+
         if let Some(employees) = department {
-            employees.retain(|employee| {employee.name != name});
+            employees.retain(|employee| employee.name != name);
         }
     }
 }
@@ -36,15 +46,16 @@ impl Company {
 fn main() {
     let mut company = Company::new();
 
+    let mut buffer = String::new();
     loop {
-        let mut input = String::new();
-        let result = std::io::stdin().read_line(&mut input);
+        buffer.clear();
+        let result = std::io::stdin().read_line(&mut buffer);
         if let Err(_) = result {
             println!("Error trying to get input. Please try again.");
             continue;
         }
 
-        let tokens: Vec<_> = input.split_whitespace().collect();        
+        let tokens: Vec<_> = buffer.split_whitespace().collect();
 
         match tokens[0].to_lowercase().as_str() {
             "exit" => break,
@@ -54,19 +65,38 @@ fn main() {
                 };
                 let target_department = String::from(tokens[3]);
                 company.add_employee(target_employee, target_department);
-            },
-            "get" | "show" => {
-                for (index, employee) in company.get_employees().iter().enumerate() {
-                    println!("{}. {}", index, employee.name)
-                }
-            },
-            "remove" => {
-                company.remove_by_name(tokens[1], tokens[3])
-
             }
-            _ => println!("Unknown input")
+            "get" | "show" => {
+                show(&company, tokens.get(3));
+            }
+            "remove" => {
+                company.remove_by_name(tokens[1], tokens[3]);
+            }
+            _ => println!("Unknown input"),
         }
-        
     }
     println!("Goodbye.")
+}
+
+fn show(company: &Company, target_department: Option<&&str>) {
+    match target_department {
+        None => {
+            for (index, employee) in company.get_employees().iter().enumerate() {
+                println!("{}. {}", index + 1, employee.name);
+            }
+        }
+        Some(department) => {
+            let opt_employees = company.get_employees_by_department(&department);
+            match opt_employees {
+                None => {
+                    println!("Department does not exist!");
+                }
+                Some(employees) => {
+                    for (index, employee) in employees.iter().enumerate() {
+                        println!("{}. {}", index + 1, employee.name);
+                    }
+                }
+            }
+        }
+    }
 }
